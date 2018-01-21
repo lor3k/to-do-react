@@ -8,26 +8,45 @@ import RaisedButton from 'material-ui/RaisedButton'
 import IconButton from 'material-ui/IconButton'
 import { List, ListItem } from 'material-ui/List'
 import Delete from 'material-ui/svg-icons/action/delete'
+import Divider from 'material-ui/Divider'
+import SelectField from 'material-ui/SelectField'
+import MenuItem from 'material-ui/MenuItem'
+import { lightBlue900 } from 'material-ui/styles/colors'
 import { database } from './Firebase'
 
 const MyListItem = props => (
 	<ListItem
-		style={{ fontFamily: 'Kalam' }}
+		style={
+			props.done ?
+				{ fontFamily: 'Kalam', textDecoration: 'line-through', color: '#aaa' }
+				:
+				{ fontFamily: 'Kalam' }
+		}
+		onClick={() => database.ref(`/${props.id}/`).update({
+			done: !props.done
+		})}
 		rightIconButton={
-			<IconButton>
+			<IconButton
+				iconStyle={{ color: lightBlue900, iconHoverColor: 'black' }}
+				onClick={() => database.ref(`/${props.id}/`).remove()}
+			>
 				<Delete />
-			</IconButton>
+			</IconButton >
 		}
 	>
 		{props.text}
-	</ListItem>
+	</ListItem >
 )
+
+
 
 class App extends React.Component {
 	state = {
 		content: '',
 		id: '',
-		tasks: []
+		done: false,
+		tasks: [],
+		value: 0
 	}
 
 	componentWillMount() {
@@ -55,41 +74,89 @@ class App extends React.Component {
 							showMenuIconButton={false}
 							title={'To Do List'}
 							titleStyle={{ textAlign: 'center', fontFamily: 'Kalam' }}
-							style={{ backgroundColor: 'darkred' }}
+							style={{ backgroundColor: lightBlue900 }}
 						/>
 						<TextField
 							multiLine={true}
 							textareaStyle={{ padding: '5px' }}
 							fullWidth={true}
-							underlineFocusStyle={{ borderColor: 'darkred' }}
+							underlineFocusStyle={{ borderColor: lightBlue900 }}
 							style={{ fontFamily: 'Kalam' }}
 							name={'myTextField'}
 							id={'myTextField'}
 							onChange={(e, value) => this.setState({
 								content: value,
-								id: Date.now()
+								id: Date.now(),
+								done: false
 							})}
 						/>
 						<div style={{ display: 'flex', justifyContent: 'center' }}>
 							<RaisedButton
-								label="Dodaj zadanie!"
-								buttonStyle={{ fontFamily: 'Kalam', backgroundColor: 'darkred' }}
+								label="add task!"
+								buttonStyle={{ fontFamily: 'Kalam', backgroundColor: lightBlue900 }}
 								labelColor={'#fff'}
 								onClick={() => {
-									database.ref(`/${this.state.id}/`).set({ content: this.state.content })
+									this.state.content ? (
+										database.ref(`/${this.state.id}/`)
+											.set({
+												content: this.state.content,
+												done: this.state.done
+											})
+									)
+										:
+										alert('You cannot add empty task!')
 								}}
 							/>
 						</div>
 						<List>
 							{
-								this.state.tasks.map(task => (
-									<MyListItem text={task.content} key={task.key} />
-								))
+								let tasksToDisplay = this.state.value === 0 ?
+								this.state.tasks
+								:
+								this.state.tasks.value === 1?
+									this.state.tasks.filter((task)=>{task.done === true})
+									:
+									this.state.tasks.filter((task)=>{task.done === true})
+
+									tasksToDisplay(task => (
+										<MyListItem
+								key={task.key}
+								text={task.content}
+								id={task.key}
+								done={task.done}
+							/>
+							))
 							}
 						</List>
+						<Divider />
+						<div style={{ display: 'flex', justifyContent: 'center' }}>
+							<SelectField
+								style={{ fontFamily: 'Kalam' }}
+								menuItemStyle={{ fontFamily: 'Kalam' }}
+								floatingLabelText={'Display'}
+								floatingLabelFixed={true}
+								listStyle={{ color: 'orange' }}
+								value={this.state.value}
+								onChange={(e, v) => this.setState({ value: v })}
+								selectedMenuItemStyle={{ color: lightBlue900 }}
+							>
+								<MenuItem
+									value={0}
+									primaryText="All"
+								/>
+								<MenuItem
+									value={1}
+									primaryText="Done"
+								/>
+								<MenuItem
+									value={2}
+									primaryText="Not done"
+								/>
+							</SelectField>
+						</div>
 					</Paper>
 				</MuiThemeProvider>
-			</div>
+			</div >
 		)
 	}
 }
