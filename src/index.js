@@ -11,7 +11,7 @@ import Delete from 'material-ui/svg-icons/action/delete'
 import Divider from 'material-ui/Divider'
 import SelectField from 'material-ui/SelectField'
 import MenuItem from 'material-ui/MenuItem'
-import { lightBlue900 } from 'material-ui/styles/colors'
+import { lightBlue900, red900 } from 'material-ui/styles/colors'
 import { database } from './Firebase'
 
 const MyListItem = props => (
@@ -27,18 +27,16 @@ const MyListItem = props => (
 		})}
 		rightIconButton={
 			<IconButton
-				iconStyle={{ color: lightBlue900, iconHoverColor: 'black' }}
+				iconStyle={{ color: lightBlue900 }}
 				onClick={() => database.ref(`/${props.id}/`).remove()}
 			>
-				<Delete />
+				<Delete hoverColor={red900} />
 			</IconButton >
 		}
 	>
 		{props.text}
 	</ListItem >
 )
-
-
 
 class App extends React.Component {
 	state = {
@@ -64,6 +62,16 @@ class App extends React.Component {
 				)
 			})
 	}
+
+	filterTasks = () => (
+		this.state.value === 0 ?
+			this.state.tasks
+			:
+			this.state.value === 1 ?
+				this.state.tasks.filter(task => task.done === true)
+				:
+				this.state.tasks.filter(task => task.done === false)
+	)
 
 	render() {
 		return (
@@ -110,22 +118,14 @@ class App extends React.Component {
 						</div>
 						<List>
 							{
-								let tasksToDisplay = this.state.value === 0 ?
-								this.state.tasks
-								:
-								this.state.tasks.value === 1?
-									this.state.tasks.filter((task)=>{task.done === true})
-									:
-									this.state.tasks.filter((task)=>{task.done === true})
-
-									tasksToDisplay(task => (
-										<MyListItem
-								key={task.key}
-								text={task.content}
-								id={task.key}
-								done={task.done}
-							/>
-							))
+								this.filterTasks().map(task => (
+									<MyListItem
+										text={task.content}
+										done={task.done}
+										key={task.key}
+										id={task.key}
+									/>
+								))
 							}
 						</List>
 						<Divider />
@@ -133,12 +133,11 @@ class App extends React.Component {
 							<SelectField
 								style={{ fontFamily: 'Kalam' }}
 								menuItemStyle={{ fontFamily: 'Kalam' }}
+								selectedMenuItemStyle={{ color: lightBlue900 }}
 								floatingLabelText={'Display'}
 								floatingLabelFixed={true}
-								listStyle={{ color: 'orange' }}
 								value={this.state.value}
 								onChange={(e, v) => this.setState({ value: v })}
-								selectedMenuItemStyle={{ color: lightBlue900 }}
 							>
 								<MenuItem
 									value={0}
@@ -150,7 +149,7 @@ class App extends React.Component {
 								/>
 								<MenuItem
 									value={2}
-									primaryText="Not done"
+									primaryText="To do"
 								/>
 							</SelectField>
 						</div>
