@@ -14,10 +14,12 @@ import MenuItem from 'material-ui/MenuItem'
 import { lightBlue900, red900 } from 'material-ui/styles/colors'
 import { database } from './Firebase'
 
+
+
 const MyListItem = props => (
 	<ListItem
 		style={
-			props.done ?
+			(props.done && !props.filterType) ?
 				{ fontFamily: 'Kalam', textDecoration: 'line-through', color: '#aaa' }
 				:
 				{ fontFamily: 'Kalam' }
@@ -45,7 +47,7 @@ class App extends React.Component {
 		done: false,
 		tasks: [],
 		filteredTasks: [],
-		value: 0
+		filterType: 0
 	}
 
 	componentWillMount() {
@@ -66,26 +68,52 @@ class App extends React.Component {
 	}
 
 	filterByStateOfDone = () => (
-		this.state.value === 0 ?
+		this.state.filterType === 0 ?
 			this.state.filteredTasks
 			:
-			this.state.value === 1 ?
+			this.state.filterType === 1 ?
 				this.state.filteredTasks.filter(task => task.done === true)
 				:
 				this.state.filteredTasks.filter(task => task.done === false)
 	)
 
 	filterByName = (e, value) => {
+		const polishSignsConversion = letter => {
+			switch (letter) {
+				case "ą": return "a"
+				case "ć": return "c"
+				case "ę": return "e"
+				case "ł": return "l"
+				case "ń": return "n"
+				case "ó": return "o"
+				case "ś": return "s"
+				case "ź": return "z"
+				case "ż": return "z"
+				default: return letter
+			}
+		}
+		const lowercaseEnglishSigns = word => (word.toLowerCase().split('').map(polishSignsConversion).join(''))
 		this.setState({
-			filteredTasks: this.state.tasks.filter(task => task.content.toLowerCase().indexOf(value.toLowerCase()) !== -1)
+			filteredTasks: this.state.tasks.filter(task => lowercaseEnglishSigns(task.content).indexOf(lowercaseEnglishSigns(value)) !== -1)
 		})
+	}
+
+	setToDatabase = () => {
+		if (this.state.content) {
+			database.ref(`/${this.state.id}/`).set({
+				content: this.state.content,
+				done: this.state.done
+			})
+			this.setState({ content: '' })
+		}
+		else { alert('You cannot add empty task!') }
 	}
 
 	render() {
 		return (
 			<div>
 				<MuiThemeProvider>
-					<Paper style={{ width: '50vw', margin: '20px' }}>
+					<Paper className={'paper'}>
 						<AppBar
 							showMenuIconButton={false}
 							title={'To Do List'}
@@ -98,8 +126,9 @@ class App extends React.Component {
 							fullWidth={true}
 							underlineFocusStyle={{ borderColor: lightBlue900 }}
 							style={{ fontFamily: 'Kalam' }}
-							name={'myTextField'}
-							id={'myTextField'}
+							name={'input'}
+							id={'input'}
+							value={this.state.content}
 							onChange={(e, value) => this.setState({
 								content: value,
 								id: Date.now(),
@@ -111,17 +140,7 @@ class App extends React.Component {
 								label="add task!"
 								buttonStyle={{ fontFamily: 'Kalam', backgroundColor: lightBlue900 }}
 								labelColor={'#fff'}
-								onClick={() => {
-									this.state.content ? (
-										database.ref(`/${this.state.id}/`)
-											.set({
-												content: this.state.content,
-												done: this.state.done
-											})
-									)
-										:
-										alert('You cannot add empty task!')
-								}}
+								onClick={this.setToDatabase}
 							/>
 						</div>
 						<List>
@@ -130,6 +149,7 @@ class App extends React.Component {
 									<MyListItem
 										text={task.content}
 										done={task.done}
+										filterType={this.state.filterType}
 										key={task.key}
 										id={task.key}
 									/>
@@ -156,8 +176,8 @@ class App extends React.Component {
 								floatingLabelFixed={true}
 								floatingLabelStyle={{ color: lightBlue900 }}
 								underlineFocusStyle={{ borderColor: lightBlue900 }}
-								value={this.state.value}
-								onChange={(e, v) => this.setState({ value: v })}
+								value={this.state.filterType}
+								onChange={(e, value) => this.setState({ filterType: value })}
 							>
 								<MenuItem
 									value={0}
