@@ -44,6 +44,7 @@ class App extends React.Component {
 		id: '',
 		done: false,
 		tasks: [],
+		filteredTasks: [],
 		value: 0
 	}
 
@@ -57,21 +58,28 @@ class App extends React.Component {
 				})
 				this.setState(
 					{
-						tasks: Object.values(tasksArray)
+						tasks: Object.values(tasksArray),
+						filteredTasks: Object.values(tasksArray)
 					}
 				)
 			})
 	}
 
-	filterTasks = () => (
+	filterByStateOfDone = () => (
 		this.state.value === 0 ?
-			this.state.tasks
+			this.state.filteredTasks
 			:
 			this.state.value === 1 ?
-				this.state.tasks.filter(task => task.done === true)
+				this.state.filteredTasks.filter(task => task.done === true)
 				:
-				this.state.tasks.filter(task => task.done === false)
+				this.state.filteredTasks.filter(task => task.done === false)
 	)
+
+	filterByName = (e, value) => {
+		this.setState({
+			filteredTasks: this.state.tasks.filter(task => task.content.toLowerCase().indexOf(value.toLowerCase()) !== -1)
+		})
+	}
 
 	render() {
 		return (
@@ -118,7 +126,7 @@ class App extends React.Component {
 						</div>
 						<List>
 							{
-								this.filterTasks().map(task => (
+								this.filterByStateOfDone().map(task => (
 									<MyListItem
 										text={task.content}
 										done={task.done}
@@ -129,13 +137,25 @@ class App extends React.Component {
 							}
 						</List>
 						<Divider />
-						<div style={{ display: 'flex', justifyContent: 'center' }}>
+						<div style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
+							<TextField
+								floatingLabelText="What are you looking for?"
+								textareaStyle={{ padding: '5px' }}
+								underlineFocusStyle={{ borderColor: lightBlue900 }}
+								floatingLabelStyle={{ color: lightBlue900 }}
+								style={{ fontFamily: 'Kalam' }}
+								name={'lookingFor'}
+								id={'lookingFor'}
+								onChange={this.filterByName}
+							/>
 							<SelectField
 								style={{ fontFamily: 'Kalam' }}
 								menuItemStyle={{ fontFamily: 'Kalam' }}
 								selectedMenuItemStyle={{ color: lightBlue900 }}
 								floatingLabelText={'Display'}
 								floatingLabelFixed={true}
+								floatingLabelStyle={{ color: lightBlue900 }}
+								underlineFocusStyle={{ borderColor: lightBlue900 }}
 								value={this.state.value}
 								onChange={(e, v) => this.setState({ value: v })}
 							>
